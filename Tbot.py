@@ -6,42 +6,36 @@ from telegram.ext import MessageHandler
 import requests
 
 
-class APIWeather:
+class APIWeather():
     def jsonOfAPI(self, city_name):
         link = f'https://api.openweathermap.org/data/2.5/weather?q={city_name}&units=metric&appid={"b41f154a86e9c4f96fd719a2d7207a11"}'
         link_api = requests.get(link)
         data_from_api = link_api.json()
-        if data_from_api['cod'] == '404':
-            return "Error"
         return data_from_api
 
 
-class BrainOfBot:
+
+
+class brainOfBot():
 
     def message_handler(self, update: Update, context: CallbackContext):
         text = update.message.text
         data = APIWeather().jsonOfAPI(text)
-        if data != 'Error':
-            update.message.reply_text(
+        update.message.reply_text(
 
-                text=f"Сегодня в вашем городе {data['main']['temp']}℃\n"
-                     "\n"
-                     f"Максимальная температура {data['main']['temp_max']}℃\n"
-                     f"Минимальная температура {data['main']['temp_min']}℃\n"
-                     f"Ощущаестя как {data['main']['feels_like']}℃\n",
-            )
-        else:
-            update.message.reply_text(
-
-                text="Ошибка\n"
-                     "Вы некоректно ввели ваш город"
-            )
+            text=f"Сегодня в вашем городе {data['main']['temp']}℃\n"
+                 "\n"
+                 f"Максимальная температура {data['main']['temp_max']}℃\n"
+                 f"Минимальная температура {data['main']['temp_min']}℃\n"
+                 f"Ощущаестя как {data['main']['feels_like']}℃\n",
+        )
 
     def main(self):
         print("Start")
 
         updater = Updater(
             token='5093069989:AAFpImvrxEnqHc_oN9ElWIQX59ywnpYxaQw',
+            use_context=True,
         )
 
         updater.dispatcher.add_handler(MessageHandler(filters=Filters.all, callback=self.message_handler))
@@ -50,6 +44,5 @@ class BrainOfBot:
 
 
 if __name__ == '__main__':
-    x = BrainOfBot()
+    x = brainOfBot()
     x.main()
-
