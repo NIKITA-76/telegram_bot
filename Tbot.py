@@ -14,13 +14,28 @@ from telegram.ext import CallbackQueryHandler
 
 
 class Content:
-    def jsonOfAPI(self, city_name):
-        link = f'https://api.openweathermap.org/data/2.5/weather?q={city_name}&units=metric&appid={"b41f154a86e9c4f96fd719a2d7207a11"}'
-        link_api = requests.get(link)
-        data_from_api = link_api.json()
-        if data_from_api['cod'] == '404':
-            return "Error"
-        return data_from_api
+    def jsonOfAPI(self, city_name, day=0):
+
+        site = requests.get("https://time-in.ru/coordinates?search=Москва")
+        try:
+            bs = BeautifulSoup(site.content, 'lxml').find('b').find('a').get('href')
+            bd = requests.get(bs)
+            listOfCoor = BeautifulSoup(bd.content, 'lxml').find('div', class_='coordinates-city-info').find('div').getText()
+        except AttributeError:
+            listOfCoor = BeautifulSoup(site.content, 'lxml').find('div', class_='coordinates-city-info').find('div').getText()
+        listOfCoor = listOfCoor.split()
+
+        lat = listOfCoor[-2].replace(',', '')
+        lon = listOfCoor[-1]
+        print(f"lat {lat}")
+        print(f"lon {lon}")
+        API_key = "b41f154a86e9c4f96fd719a2d7207a11"
+
+        link = requests.get(
+            f'https://api.openweathermap.org/data/2.5/onecall?lat={lat}&lon={lon}&units=metric&exclude=current,minute,hourly&appid={API_key}')
+        data_from_api = link.json()
+        print(data_from_api["daily"][0])
+        return data_from_api["daily"]
 
     def takeImage(self, city_name):
         date = datetime.now().month
@@ -64,7 +79,7 @@ class BrainOfBot:
                 InlineKeyboardButton("Погода", callback_data="weather"),
                 InlineKeyboardButton("Новости", callback_data="news"),
 
-            ]
+            ],
 
         ]
         return InlineKeyboardMarkup(keyboard)
@@ -73,47 +88,45 @@ class BrainOfBot:
         keyboard = [
             [
                 InlineKeyboardButton("Назад", callback_data="backToMain"),
-            ]
+            ],
 
         ]
         return InlineKeyboardMarkup(keyboard)
 
+    def keyBoardDaily(self):
+         keyboard = [
 
+             [
+                 InlineKeyboardButton("Сегодня", callback_data="now"),
+                 InlineKeyboardButton("На завтра", callback_data="tomorrow"),
+                 InlineKeyboardButton("На неделю", callback_data="week"),
+             ],
+             [
+                 InlineKeyboardButton("Назад", callback_data="backToMain"),
+
+             ],
+
+         ]
+         return InlineKeyboardMarkup(keyboard)
 
     def do_echo(self, update: Update, context: CallbackContext, ):
         print("Echo")
         userId = update.effective_user.id
         if self.dicOfState[userId] == "weather":
             text = update.message.text
-            print(text)
-            data = Content().jsonOfAPI(text)
+            self.data = Content().jsonOfAPI(text)
             linkImg = Content().takeImage(text)
-            try:
-                update.message.reply_text(
 
-
-                    f"Сегодня в вашем городе {data['main']['temp']}℃\n"
-                    "\n"
-                    f"Максимальная температура {data['main']['temp_max']}℃\n"
-                    f"Минимальная температура {data['main']['temp_min']}℃\n"
-                    f"Ощущаестя как {data['main']['feels_like']}℃\n",
-                    reply_markup=self.keyBoardToMain()
-
-                )
-            except TypeError as er:
-                print(er)
-                update.message.reply_photo(
-
-                    photo="https://sun9-37.userapi.com/impg/-XQO_OQhbrdbfHLghGKMz1YrWz6ZJQGG9hZvpg/fw2jsw0uC6U.jpg?size=1312x1044&quality=96&sign=2dab725107599285e4fafb78cc4e2aba&type=album",
-                    caption="Пффф, не город а фигня какая-то\n"
-                    "\n"
-                    "Давай по новой",
-
-                    reply_markup=self.keyBoardToMain()
-
-                )
-
-
+            update.message.reply_text(
+                f"Сегодня в вашем городе { self.data[0]['temp']['day']}℃\n"
+                "\n"
+                f"Днем {self.data[0]['temp']['day']}\n"
+                f"Ночью {self.data[0]['temp']['night']}℃\n"
+                f"Облачность {self.data[0]['clouds']}%\n"
+                f"Днем ощущаестя как {self.data[0]['feels_like']['day']}℃\n"
+                f"Ночью ощущаестя как {self.data[0]['feels_like']['night']}℃\n",
+                reply_markup=self.keyBoardDaily()
+            )
 
     def news(self, update: Update):
         linkNews = 1
@@ -145,6 +158,46 @@ class BrainOfBot:
                 reply_markup=self.keyBoardMain()
 
             )
+        elif data == "now":
+            query.edit_message_text(
+                f"Сегодня в вашем городе { self.data[0]['temp']['day']}℃\n"
+                "\n"
+                f"Днем { self.data[0]['temp']['day']}\n"
+                f"Ночью { self.data[0]['temp']['night']}℃\n"
+                f"Облачность { self.data[0]['clouds']}%\n"
+                f"Днем ощущаестя как { self.data[0]['feels_like']['day']}℃\n"
+                f"Ночью ощущаестя как {self.data[0]['feels_like']['night']}℃\n",
+                reply_markup=self.keyBoardDaily()
+            )
+        elif data == "tomorrow":
+            query.edit_message_text(
+                f"Завтра в вашем городе { self.data[1]['temp']['day']}℃\n"
+                "\n"
+                f"Днем { self.data[1]['temp']['day']}\n"
+                f"Ночью { self.data[1]['temp']['night']}℃\n"
+                f"Облачность { self.data[1]['clouds']}%\n"
+                f"Днем ощущаестя как { self.data[1]['feels_like']['day']}℃\n"
+                f"Ночью ощущаестя как {self.data[0]['feels_like']['night']}℃\n",
+                reply_markup=self.keyBoardDaily()
+            )
+        elif data == "week":
+            s = []
+            i = 0
+            for day in self.data:
+                print(i)
+                s.append(day['temp']['day'])
+                i += 1
+            print(s)
+            query.edit_message_text(
+                f"Сегодня {s[0]}℃\n"
+                f"Завтра {s[1]}℃\n"
+                f"Послезавтра  {s[2]}℃\n"
+                f"4  {s[3]}℃\n"
+                f"5  {s[4]}℃\n"
+                f"6  {s[5]}℃\n"
+                f"7  {s[6]}℃\n",
+                reply_markup=self.keyBoardDaily()
+            )
 
     def main(self, ):
         print("Поехали")
@@ -155,6 +208,7 @@ class BrainOfBot:
 
         updater.dispatcher.add_handler(MessageHandler(filters=Filters.text, callback=self.do_echo))
         updater.dispatcher.add_handler(CallbackQueryHandler(callback=self.keyboardHendler))
+        updater.dispatcher.add_handler(MessageHandler(filters=Filters.text, callback=self.do_echo))
 
         updater.start_polling()
         updater.idle()
@@ -162,3 +216,4 @@ class BrainOfBot:
 
 if __name__ == '__main__':
     BrainOfBot().main()
+
