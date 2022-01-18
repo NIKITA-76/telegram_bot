@@ -19,21 +19,19 @@ class BrainOfBot:
         self.dicOfState = {}
         self.missTake = 0
 
+    def do_echo_sticker(self, update: Update, context: CallbackContext,):
+        update.message.reply_text(
+            text="Четкий",
+            reply_markup=Keyboard().keyBoardMain(),
+        )
     def do_echo(self, update: Update, context: CallbackContext, ):
         userId = update.effective_user.id
         if self.dicOfState[userId] == "weather":
-            text = update.message.text
-            if Content().jsonOfAPI(text) != "ERROR_IN_JSON_API":
-                self.data = Content().jsonOfAPI(text)
-
+            self.text = update.message.text
+            if Content().jsonOfAPI(city_name=self.text, day="now", ) != "ERROR_IN_JSON_API":
+                data = Content().jsonOfAPI(city_name=self.text, day="now")
                 update.message.reply_text(
-                    f"Сегодня в вашем городе {self.data[0]['temp']['day']}℃\n"
-                    "\n"
-                    f"Днем {self.data[0]['temp']['day']}\n"
-                    f"Ночью {self.data[0]['temp']['night']}℃\n"
-                    f"Облачность {self.data[0]['clouds']}%\n"
-                    f"Днем ощущаестя как {self.data[0]['feels_like']['day']}℃\n"
-                    f"Ночью ощущаестя как {self.data[0]['feels_like']['night']}℃\n",
+                    text="Сегодня" + data,
                     reply_markup=Keyboard().keyBoardDaily()
                 )
             else:
@@ -70,264 +68,206 @@ class BrainOfBot:
                 linkNews += 2
 
     def keyboardHendler(self, update: Update, bot: Bot, chat_data=None, **kwargs):
+
         query = update.callback_query
-        data = query.data
+        dataFromKeyboard = query.data
         userId = update.effective_user.id
-        if data == "weather":
-            self.dicOfState[userId] = "weather"
-            update.effective_message.reply_text(
-                "Где узнаем погоду?",
-                reply_markup=Keyboard().keyBoardToMain()
-            )
-        elif data == "news":
-            self.news(update)
+        match dataFromKeyboard:
+            case "news":
+                print(dataFromKeyboard)
+                self.news(update)
 
-
-        elif data == "backToMain":
-            self.dicOfState[userId] = "main"
-            self.missTake = 0
-            update.effective_message.reply_text(
-                "Погода? Новости? У меня есть и то и другое!",
-                reply_markup=Keyboard().keyBoardMain()
-
-            )
-
-
-        elif data == "now":
-            query.edit_message_text(
-                f"Сегодня в вашем городе {self.data[0]['temp']['day']}℃\n"
-                "\n"
-                f"Днем {self.data[0]['temp']['day']}\n"
-                f"Ночью {self.data[0]['temp']['night']}℃\n"
-                f"Облачность {self.data[0]['clouds']}%\n"
-                f"Днем ощущаестя как {self.data[0]['feels_like']['day']}℃\n"
-                f"Ночью ощущаестя как {self.data[0]['feels_like']['night']}℃\n",
-                reply_markup=Keyboard().keyBoardDaily()
-            )
-        elif data == "tomorrow":
-            query.edit_message_text(
-                f"Завтра в вашем городе {self.data[1]['temp']['day']}℃\n"
-                "\n"
-                f"Днем {self.data[1]['temp']['day']}\n"
-                f"Ночью {self.data[1]['temp']['night']}℃\n"
-                f"Облачность {self.data[1]['clouds']}%\n"
-                f"Днем ощущаестя как {self.data[1]['feels_like']['day']}℃\n"
-                f"Ночью ощущаестя как {self.data[1]['feels_like']['night']}℃\n",
-                reply_markup=Keyboard().keyBoardDaily()
-            )
-        elif data == "week":
-            days = datetime.now()
-            listOfDaysForWeather = []
-            i = 0
-            if days.month < 10:
-                month = "0" + str(days.month)
-            else:
-                month = days.month
-            for day in self.data:
-                listOfDaysForWeather.append(day['temp']['day'])
-                i += 1
-            query.edit_message_text(
-                f"Сегодня {listOfDaysForWeather[0]}℃\n"
-                f"Завтра {listOfDaysForWeather[1]}℃\n"
-                f"Послезавтра  {listOfDaysForWeather[2]}℃\n"
-                f"{days.day + 3}.{month}  {listOfDaysForWeather[3]} ℃\n"
-                f"{days.day + 4}.{month}  {listOfDaysForWeather[3]} ℃\n"
-                f"{days.day + 5}.{month}  {listOfDaysForWeather[4]} ℃\n"
-                f"{days.day + 6}.{month}  {listOfDaysForWeather[5]} ℃\n",
-                reply_markup=Keyboard().keyBoardDaily(),
-            )
-
-
-        elif data == "backToHOME":
-            if self.dicOfState[userId] == "creepy":
-                bot.bot.send_animation(
-                    chat_id=userId,
-                    animation="https://c.tenor.com/nlYV4at3ptgAAAAC/demon-ghost.gif",
-                    caption="Забежав домой, ты видиешь женщину, мотая головой она боромочит\n"
-                            "Не нужно... было... его... злить... \n"
-                            "не нужно... злить... его...",
-                    reply_markup=Keyboard().keyBoardFromHomeCreepy(),
-
-                )
-        elif data == "runFromHome":
-            if self.dicOfState[userId] == "creepy":
-                bot.bot.send_animation(
-                    chat_id=userId,
-                    animation="https://c.tenor.com/G2C-QoymHjwAAAAC/horror-demon.gif",
-                    caption="НЕ УСПЕЛ",
-
-                )
-            time.sleep(1.5)
-            update.effective_message.reply_photo(
-                photo="https://media.istockphoto.com/photos/dark-scream-picture-id135165661?k=20&m=135165661&s=170667a&w=0&h=vCl5Uwq1SUvnkyJJbyLtvVpKEjoKUj7G8pLXFhgeths=",
-                reply_markup=Keyboard().keyBoardScreamCreepy(),
-
-            )
-
-
-        elif data == "backToForest":
-            update.effective_message.reply_text(
-                "Ты бежишь в лес"
-            )
-            time.sleep(3.2)
-            update.effective_message.reply_text(
-                "Ты понимаешь что он догоняет...\n"
-                "Нужно срочно что-то предпринимать",
-            )
-            time.sleep(3.2)
-            update.effective_message.reply_text(
-                "Ты замечаешь одинокий дом, в нем можно спрятаться \n"
-                "Или же\n"
-                "Можно бежать дальше в лес",
-                reply_markup=Keyboard().keyBoardForestOrLonelyHouse()
-            ),
-
-
-        elif data == "backToLonelyHome":
-            update.effective_message.reply_photo(
-                photo="https://psv4.userapi.com/c237131/u245081982/docs/d45/2665d458b3fd/LonelyHouse.jpg?extra=jCTYUXRyTpfsaxTZ42PoR9n_gIgm8DGCtWYjI35e2Hh4IUVs51OEE3J9BaSVyr8qCLDM5bra_DhSq3RZ57BFK2pUjZ8c7lPRPjjMlb7i-maQfQXzscZ55DIoRuPVjN3hDpScNE0AF5wqEpIJmENuovQ",
-                reply_markup=Keyboard().keyBoardGoIntoHouse()
-
-            )
-
-        elif data == "goIntoHouse":
-            update.effective_message.reply_text(
-                "Забежав в дом, ты в панике ищешь любое укрытие",
-
-
-            )
-            time.sleep(3.2)
-            update.effective_message.reply_text(
-                "Найдя комнату, ты вошел в нее и затаил дыхание",
-
-
-            )
-            time.sleep(3.2)
-            update.effective_message.reply_text(
-                "Ты слышишь как он приблежаеться к твоей комнате...",
-
-
-            )
-            time.sleep(3.5)
-            update.effective_message.reply_text(
-                "Он понял что ты там",
-
-
-            )
-            time.sleep(3.5)
-            update.effective_message.reply_text(
-                "Он пытаеться выломать дверь",
-
-
-            )
-            time.sleep(3.5)
-            update.effective_message.reply_text(
-                "От страха, ты прижался к стене",
-
-
-            )
-            time.sleep(3.5)
-            update.effective_message.reply_text(
-                "Тишина.......",
-
-
-            )
-            time.sleep(4)
-            update.effective_message.reply_text(
-                "Он выломал дверь...",
-
-
-            )
-            time.sleep(3)
-            update.effective_message.reply_photo(
-                photo="https://psv4.userapi.com/c237131/u245081982/docs/d12/f74c8b493955/Dq30lA_XgAIR9Sd.jpg?extra=Bntz1K17f338HkOIPc7rgE-W3Vb4BhPG1R0fTaJKcgiR5HFF1BMpB_CiSOtKU5gjPEibpxOsc7d77grHnQOKACAlAp8sFt5eZS4mssYaK854u31Xvw8qip8AmoH534oCIXtIqZQqYsEuDJHU1ZBLOe0",
-                caption="НЕ НУЖНО БЫЛО ЕГО ЗЛИТЬ",
-
-            )
-            time.sleep(3.5)
-            update.effective_message.reply_photo(
-                photo="https://psv4.userapi.com/c237131/u245081982/docs/d19/9ef1b39e8609/pxfuel_com_-scaled.jpg?extra=a4oVMaYIQc52Uab_QJNKlYWYWx_sKDBk6J4qj-ByJS8LPVPyv7Wu6kC49jKGw2ocVebm8h08gmSJeZDGKiiG52ZO73CNSXMATn-l5LrP9JR-HHAu0PZSYforltL6Uja58S8yJLGoXqtpe5fOSGZoUCU/HXAVJ_0sQks.jpg?size=1439x946&quality=96&sign=b697480249cf92d471494ad17bf3d1ba&type=album",
-                reply_markup=Keyboard().keyBoardScreamCreepy(),
-
-            )
-
-
-        elif data =="backToForestForest":
-            time.sleep(1)
-            update.effective_message.reply_text(
-                "Твоя выносливость говорит сама за себя. Пробежав какое-то расстояние, "
-                "ты понимаешь, бежать больше ты не в состаянии",
-
-
-            )
-            time.sleep(5)
-            update.effective_message.reply_text(
-                "Ты спрятался за деревом",
-
-
-            )
-            time.sleep(2.6)
-            update.effective_message.reply_text(
-                "Вроде пронесло",
-
-
-            )
-            time.sleep(2.8)
-            update.effective_message.reply_text(
-                "По крайней мере ты его не видишь",
-
-
-            )
-            time.sleep(2.3)
-            update.effective_message.reply_text(
-                "И не слышишь",
-
-
-            )
-            time.sleep(1.5)
-            update.effective_message.reply_text(
-                "Почти задыхаясь, ты вспоминаешь что в кармане где-то есть фонарик",
-                reply_markup=Keyboard().keyBoardTakeFlashlight()
-
-            )
-
-        elif data == "takeFlashlight":
-            update.effective_message.reply_text(
-                "Ты рыщешь по карманам в его поиске",
-
-
-            )
-            time.sleep(4)
-            update.effective_message.reply_text(
-                "А вот и он",
-                reply_markup=Keyboard().keyBoardSwitchOnFlashlight()
-            )
-        elif data == "switchOnFlashlight":
-            update.effective_message.reply_text(
-                "Ты включаешь фонарик...",
-            )
-            time.sleep(1.5)
-
-            update.effective_message.reply_photo(
-
-                photo="https://psv4.userapi.com/c237131/u245081982/docs/d40/28c211c829cb/EBGjQjPXsAA82AB.jpg?extra=OGBmmtQYIUDCw7LLuJkoCxrEQLXPbqI7bClutIYFKikyGyvo5r_K_fPXdnwMGDhAOgNEQAREifBGgktzxwhBlWIz_6nSW6IM5qj3ccT2lNCL19C5GE-49bJQLK_IwRwLwBnb9ful8I-AXPoaBzRV4DA",
-                caption="НЕ НУЖНО БЫЛО ЕГО ЗЛИТЬ",
-            )
-            time.sleep(3)
-
-            update.effective_message.reply_photo(
-
-                photo="https://psv4.userapi.com/c237131/u245081982/docs/d19/9ef1b39e8609/pxfuel_com_-scaled.jpg?extra=a4oVMaYIQc52Uab_QJNKlYWYWx_sKDBk6J4qj-ByJS8LPVPyv7Wu6kC49jKGw2ocVebm8h08gmSJeZDGKiiG52ZO73CNSXMATn-l5LrP9JR-HHAu0PZSYforltL6Uja58S8yJLGoXqtpe5fOSGZoUCU",
-                reply_markup=Keyboard().keyBoardScreamCreepy(),
-            )
-
-        elif data == "backToMainFromCreepy":
-            if self.dicOfState[userId] == "creepy":
+            case "weather":
+                self.dicOfState[userId] = "weather"
                 update.effective_message.reply_text(
-                    "Погода? Новости? Если не злить, можно все получить!",
+                    "Где узнаем погоду?",
+                    reply_markup=Keyboard().keyBoardToMain()
+                )
+            case "backToMain":
+                self.dicOfState[userId] = "main"
+                self.missTake = 0
+                update.effective_message.reply_text(
+                    "Погода? Новости? У меня есть и то и другое!",
                     reply_markup=Keyboard().keyBoardMain()
 
                 )
+            case "now":
+                data = Content().jsonOfAPI(city_name=self.text, day=dataFromKeyboard)
+                query.edit_message_text(
+                    text="Сегодня" + data,
+                    reply_markup=Keyboard().keyBoardDaily(),
+                )
+            case "tomorrow":
+                data = Content().jsonOfAPI(city_name=self.text, day=dataFromKeyboard)
+                query.edit_message_text(
+                    text="Завтра" + data,
+                    reply_markup=Keyboard().keyBoardDaily(),
+                )
+            case "week":
+                data = Content().jsonOfAPI(city_name=self.text, day=dataFromKeyboard)
+                days = datetime.now()
+                listOfDaysForWeather = []
+                i = 0
+                if days.month < 10:
+                    month = "0" + str(days.month)
+                else:
+                    month = days.month
+                for day in data:
+                    listOfDaysForWeather.append(day['temp']['day'])
+                    i += 1
+                query.edit_message_text(
+                    f"Сегодня {listOfDaysForWeather[0]}℃\n"
+                    f"Завтра {listOfDaysForWeather[1]}℃\n"
+                    f"Послезавтра  {listOfDaysForWeather[2]}℃\n"
+                    f"{days.day + 3}.{month}  {listOfDaysForWeather[3]} ℃\n"
+                    f"{days.day + 4}.{month}  {listOfDaysForWeather[3]} ℃\n"
+                    f"{days.day + 5}.{month}  {listOfDaysForWeather[4]} ℃\n"
+                    f"{days.day + 6}.{month}  {listOfDaysForWeather[5]} ℃\n",
+                    reply_markup=Keyboard().keyBoardDaily(),
+                )
+            case "backToMain":
+                self.dicOfState[userId] = "main"
+                self.missTake = 0
+                update.effective_message.reply_text(
+                    "Погода? Новости? У меня есть и то и другое!",
+                    reply_markup=Keyboard().keyBoardMain()
+
+                )
+            case "backToHOME":
+                if self.dicOfState[userId] == "creepy":
+                    bot.bot.send_animation(
+                        chat_id=userId,
+                        animation="https://c.tenor.com/nlYV4at3ptgAAAAC/demon-ghost.gif",
+                        caption="Забежав домой, ты видиешь женщину, мотая головой она боромочит\n"
+                                "Не нужно... было... его... злить... \n"
+                                "не нужно... злить... его...",
+                        reply_markup=Keyboard().keyBoardFromHomeCreepy(),
+
+                    )
+            case "runFromHome":
+                if self.dicOfState[userId] == "creepy":
+                    bot.bot.send_animation(
+                        chat_id=userId,
+                        animation="https://c.tenor.com/G2C-QoymHjwAAAAC/horror-demon.gif",
+                        caption="НЕ УСПЕЛ",
+
+                    )
+                time.sleep(1.5)
+                update.effective_message.reply_photo(
+                    photo="https://media.istockphoto.com/photos/dark-scream-picture-id135165661?k=20&m=135165661&s=170667a&w=0&h=vCl5Uwq1SUvnkyJJbyLtvVpKEjoKUj7G8pLXFhgeths=",
+                    reply_markup=Keyboard().keyBoardScreamCreepy(),
+
+                )
+            case "backToForest":
+                update.effective_message.reply_text(
+                    "Ты бежишь в лес"
+                )
+                time.sleep(3.2)
+                update.effective_message.reply_text(
+                    "Ты понимаешь что он догоняет...\n"
+                    "Нужно срочно что-то предпринимать",
+                )
+                time.sleep(3.2)
+                update.effective_message.reply_text(
+                    "Ты замечаешь одинокий дом, в нем можно спрятаться \n"
+                    "Или же\n"
+                    "Можно бежать дальше в лес",
+                    reply_markup=Keyboard().keyBoardForestOrLonelyHouse()
+                ),
+
+            case "backToLonelyHome":
+                update.effective_message.reply_photo(
+                    photo="https://psv4.userapi.com/c237131/u245081982/docs/d45/2665d458b3fd/LonelyHouse.jpg?extra=jCTYUXRyTpfsaxTZ42PoR9n_gIgm8DGCtWYjI35e2Hh4IUVs51OEE3J9BaSVyr8qCLDM5bra_DhSq3RZ57BFK2pUjZ8c7lPRPjjMlb7i-maQfQXzscZ55DIoRuPVjN3hDpScNE0AF5wqEpIJmENuovQ",
+                    reply_markup=Keyboard().keyBoardGoIntoHouse()
+
+                )
+
+            case "goIntoHouse":
+                goIH = ["Забежав в дом, ты в панике ищешь любое укрытие",
+                        "Найдя комнату, ты вошел в нее и затаил дыхание",
+                        "Ты слышишь как он приблежаеться к твоей комнате...",
+                        "Он понял что ты там",
+                        "От страха, ты прижался к стене",
+                        "Он выломал дверь...",
+
+                        ]
+                for i in goIH:
+                    update.effective_message.reply_text(
+                        text=i
+
+                    )
+                    time.sleep(2.8)
+
+                time.sleep(3)
+                update.effective_message.reply_photo(
+                    photo="https://psv4.userapi.com/c237131/u245081982/docs/d12/f74c8b493955/Dq30lA_XgAIR9Sd.jpg?extra=Bntz1K17f338HkOIPc7rgE-W3Vb4BhPG1R0fTaJKcgiR5HFF1BMpB_CiSOtKU5gjPEibpxOsc7d77grHnQOKACAlAp8sFt5eZS4mssYaK854u31Xvw8qip8AmoH534oCIXtIqZQqYsEuDJHU1ZBLOe0",
+                    caption="НЕ НУЖНО БЫЛО ЕГО ЗЛИТЬ",
+
+                )
+                time.sleep(3.5)
+                update.effective_message.reply_photo(
+                    photo="https://psv4.userapi.com/c237131/u245081982/docs/d19/9ef1b39e8609/pxfuel_com_-scaled.jpg?extra=a4oVMaYIQc52Uab_QJNKlYWYWx_sKDBk6J4qj-ByJS8LPVPyv7Wu6kC49jKGw2ocVebm8h08gmSJeZDGKiiG52ZO73CNSXMATn-l5LrP9JR-HHAu0PZSYforltL6Uja58S8yJLGoXqtpe5fOSGZoUCU/HXAVJ_0sQks.jpg?size=1439x946&quality=96&sign=b697480249cf92d471494ad17bf3d1ba&type=album",
+                    reply_markup=Keyboard().keyBoardScreamCreepy(),
+
+                )
+
+            case "backToForestForest":
+                backFF = ["Ты спрятался за деревом", "Вроде пронесло",
+                          "По крайней мере ты его не видишь",
+                          "И не слышишь...", ]
+
+                update.effective_message.reply_text(
+                    "Твоя выносливость говорит сама за себя. Пробежав какое-то расстояние, "
+                    "ты понимаешь, бежать больше ты не в состаянии",
+
+                )
+                time.sleep(5)
+                for i in backFF:
+                    update.effective_message.reply_text(
+                        text=i
+
+                    )
+                    time.sleep(2.8)
+                update.effective_message.reply_text(
+                    "Почти задыхаясь, ты вспоминаешь что в кармане где-то есть фонарик",
+                    reply_markup=Keyboard().keyBoardTakeFlashlight()
+
+                )
+            case "takeFlashlight":
+                update.effective_message.reply_text(
+                    "Ты рыщешь по карманам в его поиске",
+
+                )
+                time.sleep(4)
+                update.effective_message.reply_text(
+                    "А вот и он",
+                    reply_markup=Keyboard().keyBoardSwitchOnFlashlight()
+                )
+            case "switchOnFlashlight":
+                update.effective_message.reply_text(
+                    "Ты включаешь фонарик...",
+                )
+                time.sleep(1.5)
+
+                update.effective_message.reply_photo(
+
+                    photo="https://psv4.userapi.com/c237131/u245081982/docs/d40/28c211c829cb/EBGjQjPXsAA82AB.jpg?extra=OGBmmtQYIUDCw7LLuJkoCxrEQLXPbqI7bClutIYFKikyGyvo5r_K_fPXdnwMGDhAOgNEQAREifBGgktzxwhBlWIz_6nSW6IM5qj3ccT2lNCL19C5GE-49bJQLK_IwRwLwBnb9ful8I-AXPoaBzRV4DA",
+                    caption="НЕ НУЖНО БЫЛО ЕГО ЗЛИТЬ",
+                )
+                time.sleep(3)
+
+                update.effective_message.reply_photo(
+
+                    photo="https://psv4.userapi.com/c237131/u245081982/docs/d19/9ef1b39e8609/pxfuel_com_-scaled.jpg?extra=a4oVMaYIQc52Uab_QJNKlYWYWx_sKDBk6J4qj-ByJS8LPVPyv7Wu6kC49jKGw2ocVebm8h08gmSJeZDGKiiG52ZO73CNSXMATn-l5LrP9JR-HHAu0PZSYforltL6Uja58S8yJLGoXqtpe5fOSGZoUCU",
+                    reply_markup=Keyboard().keyBoardScreamCreepy(),
+                )
+            case "backToMainFromCreepy":
+                if self.dicOfState[userId] == "creepy":
+                    update.effective_message.reply_text(
+                        "Погода? Новости? Если не злить, можно все получить!",
+                        reply_markup=Keyboard().keyBoardMain()
+
+                    )
 
     def main(self, ):
         print("Поехали")
@@ -338,7 +278,7 @@ class BrainOfBot:
 
         updater.dispatcher.add_handler(MessageHandler(filters=Filters.text, callback=self.do_echo))
         updater.dispatcher.add_handler(CallbackQueryHandler(callback=self.keyboardHendler))
-        updater.dispatcher.add_handler(MessageHandler(filters=Filters.sticker, callback=self.do_echo))
+        updater.dispatcher.add_handler(MessageHandler(filters=Filters.sticker, callback=self.do_echo_sticker))
 
         updater.start_polling()
         updater.idle()
@@ -346,3 +286,4 @@ class BrainOfBot:
 
 if __name__ == '__main__':
     BrainOfBot().main()
+
