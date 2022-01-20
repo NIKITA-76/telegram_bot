@@ -1,5 +1,8 @@
+from datetime import datetime
+
 import requests
 from bs4 import BeautifulSoup
+
 
 class Content:
 
@@ -12,7 +15,8 @@ class Content:
                 'div').getText()
         except AttributeError:
             try:
-                listOfCoordinates = BeautifulSoup(site.content, 'lxml').find('div', class_='coordinates-city-info').find(
+                listOfCoordinates = BeautifulSoup(site.content, 'lxml').find('div',
+                                                                             class_='coordinates-city-info').find(
                     'div').getText()
             except AttributeError:
                 return "ERROR"
@@ -30,28 +34,51 @@ class Content:
             link = requests.get(
                 f'https://api.openweathermap.org/data/2.5/onecall?lat={lat}&lon={lon}&units=metric&exclude=current,minute,hourly&appid={API_key}')
             data = link.json()
+            if data['daily'][0]['humidity'] > 60:
+                smiles0 = "\U00002601"
+            else:
+                smiles0 = "\U00002600"
+            try:
+                listOfInfo = []
+                for i in data['alerts']:
+                    if i['description'] != "":
+                        listOfInfo.append("⦿" + (i['description']).capitalize() + "\n")
+                info = ''.join(listOfInfo)
+                alerts = "\n" + info
+                print(info)
+            except KeyError:
+                alerts = "Предупреждений нет"
+
             if day == "now":
-                return f" в вашем городе {data['daily'][0]['temp']['day']}℃\n" \
-                                 "\n" \
-                                 f"Днем {data['daily'][0]['temp']['day']}\n" \
-                                 f"Ночью {data['daily'][0]['temp']['night']}℃\n" \
-                                 f"Облачность {data['daily'][0]['clouds']}%\n" \
-                                 f"Днем ощущаестя как {data['daily'][0]['feels_like']['day']}℃\n" \
-                                 f"Ночью ощущаестя как {data['daily'][0]['feels_like']['night']}℃\n"
+                return f" в вашем городе {data['daily'][0]['temp']['day']}℃\n " \
+                       "\n" \
+                       f"Днем {data['daily'][0]['temp']['day']}\n"  \
+                       f"Ночью {data['daily'][0]['temp']['night']}℃\n"  \
+                       f"Облачность {data['daily'][0]['clouds']}%" + smiles0 + "\n" \
+                       f"Влажность {data['daily'][0]['humidity']}% \n" \
+                       f"Днем ощущаестя как {data['daily'][0]['feels_like']['day']}℃\n" \
+                       f"Ночью ощущаестя как {data['daily'][0]['feels_like']['night']}℃\n" \
+                       f"\U000026A0 ПРЕДУПРЕЖДЕНИЯ НА {str(datetime.utcfromtimestamp(data['alerts'][-1]['start']).date())}: " \
+                       f"\n" \
+                       f"{alerts}"
             elif day == "tomorrow":
+                if data['daily'][1]['humidity'] > 60:
+                    smiles1 = "\U00002601"
+                else:
+                    smiles1 = "\U00002600"
                 return f" в вашем городе {data['daily'][1]['temp']['day']}℃\n" \
                        "\n" \
                        f"Днем {data['daily'][1]['temp']['day']}\n" \
                        f"Ночью {data['daily'][1]['temp']['night']}℃\n" \
-                       f"Облачность {data['daily'][1]['clouds']}%\n" \
+                       f"Облачность {data['daily'][1]['clouds']}%" + smiles1 +"\n"\
+                       f"Влажность {data['daily'][1]['humidity']}% \n"  \
                        f"Днем ощущаестя как {data['daily'][1]['feels_like']['day']}℃\n" \
-                       f"Ночью ощущаестя как {data['daily'][1]['feels_like']['night']}℃\n"
+                       f"Ночью ощущаестя как {data['daily'][1]['feels_like']['night']}℃\n" \
+                       f"\U000026A0 ПРЕДУПРЕЖДЕНИЯ НА {str(datetime.utcfromtimestamp(data['alerts'][-1]['start']).date())}: " \
+                       f"\n" \
+                       f"{alerts}"
             elif day == "week":
-                return data["daily"]
-
-
-
-
+                return data["daily"], alerts
 
     def news(self):
         page = requests.get("https://ria.ru/world/")
@@ -60,6 +87,7 @@ class Content:
         html = soup.findAll('a', class_="list-item__title color-font-hover-only")
         news = []
         for data in html:
-            news.append(data.text)
             news.append(data.get('href'))
+            if len(news) == 5:
+                break
         return news
