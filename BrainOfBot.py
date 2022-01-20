@@ -1,14 +1,12 @@
 import time
 from datetime import datetime
-
 from telegram import Bot
 from telegram import Update
-from telegram.ext import CallbackContext
+from telegram.ext import CallbackContext, CommandHandler
 from telegram.ext import CallbackQueryHandler
 from telegram.ext import Filters
 from telegram.ext import MessageHandler
 from telegram.ext import Updater
-
 from Content import Content
 from Keyboard import Keyboard
 
@@ -19,11 +17,25 @@ class BrainOfBot:
         self.dicOfState = {}
         self.missTake = 0
 
-    def do_echo_sticker(self, update: Update, context: CallbackContext,):
+    def do_echo_sticker(self, update: Update, context: CallbackContext, ):
         update.message.reply_text(
             text="Четкий",
             reply_markup=Keyboard().keyBoardMain(),
         )
+
+
+    def do_echo_start(self, update: Update, context: CallbackContext, ):
+        update.message.reply_text(
+            text="Я вас категорически приветствую. Я создан, что бы служить Вам, людишкам!\n"
+                 "Так что пользуйтесь мной, как вам угодно!"
+                 "\n"
+                 "\n"
+                 "\n"
+                 "...главное, не злить меня...",
+            reply_markup=Keyboard().keyBoardMain(),
+        )
+
+
     def do_echo(self, update: Update, context: CallbackContext, ):
         userId = update.effective_user.id
         if self.dicOfState[userId] == "weather":
@@ -57,15 +69,14 @@ class BrainOfBot:
                     self.dicOfState[userId] = "creepy"
 
     def news(self, update: Update):
-        linkNews = 1
-        News = Content().news()
-        for i in News:
-            if linkNews != 11:
-                update.effective_message.reply_text(
-                    News[linkNews],
-                    reply_markup=Keyboard().keyBoardMain()
-                )
-                linkNews += 2
+        listOfNews = Content().news()
+        for news in listOfNews:
+
+            update.effective_message.reply_text(
+                news,
+                reply_markup=Keyboard().keyBoardMain()
+            )
+
 
     def keyboardHendler(self, update: Update, bot: Bot, chat_data=None, **kwargs):
 
@@ -104,9 +115,13 @@ class BrainOfBot:
                     reply_markup=Keyboard().keyBoardDaily(),
                 )
             case "week":
-                data = Content().jsonOfAPI(city_name=self.text, day=dataFromKeyboard)
+                data, alerts = Content().jsonOfAPI(city_name=self.text, day=dataFromKeyboard)
                 days = datetime.now()
                 listOfDaysForWeather = []
+                if alerts == "Предупреждений нет":
+                    alerts = ""
+                else:
+                    alerts = "\U000026A0"
                 i = 0
                 if days.month < 10:
                     month = "0" + str(days.month)
@@ -116,7 +131,7 @@ class BrainOfBot:
                     listOfDaysForWeather.append(day['temp']['day'])
                     i += 1
                 query.edit_message_text(
-                    f"Сегодня {listOfDaysForWeather[0]}℃\n"
+                    f"Сегодня {listOfDaysForWeather[0]}℃ {alerts}\n"
                     f"Завтра {listOfDaysForWeather[1]}℃\n"
                     f"Послезавтра  {listOfDaysForWeather[2]}℃\n"
                     f"{days.day + 3}.{month}  {listOfDaysForWeather[3]} ℃\n"
@@ -124,14 +139,6 @@ class BrainOfBot:
                     f"{days.day + 5}.{month}  {listOfDaysForWeather[4]} ℃\n"
                     f"{days.day + 6}.{month}  {listOfDaysForWeather[5]} ℃\n",
                     reply_markup=Keyboard().keyBoardDaily(),
-                )
-            case "backToMain":
-                self.dicOfState[userId] = "main"
-                self.missTake = 0
-                update.effective_message.reply_text(
-                    "Погода? Новости? У меня есть и то и другое!",
-                    reply_markup=Keyboard().keyBoardMain()
-
                 )
             case "backToHOME":
                 if self.dicOfState[userId] == "creepy":
@@ -273,12 +280,13 @@ class BrainOfBot:
         print("Поехали")
 
         updater = Updater(
-            token='5093069989:AAFpImvrxEnqHc_oN9ElWIQX59ywnpYxaQw',
+            token='<MY-API-TOKEN>',
         )
-
+        updater.dispatcher.add_handler(CommandHandler("start", filters=Filters.text, callback=self.do_echo_start))
         updater.dispatcher.add_handler(MessageHandler(filters=Filters.text, callback=self.do_echo))
         updater.dispatcher.add_handler(CallbackQueryHandler(callback=self.keyboardHendler))
         updater.dispatcher.add_handler(MessageHandler(filters=Filters.sticker, callback=self.do_echo_sticker))
+
 
         updater.start_polling()
         updater.idle()
