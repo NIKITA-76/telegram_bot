@@ -81,13 +81,23 @@ class Content:
                 return data["daily"], alerts
 
     def news(self):
-        page = requests.get("https://ria.ru/world/")
+        page = requests.get("https://tvrain.ru/news/")
         x = page.content
         soup = BeautifulSoup(x, 'html.parser')
-        html = soup.findAll('a', class_="list-item__title color-font-hover-only")
-        news = []
-        for data in html:
-            news.append(data.get('href'))
-            if len(news) == 5:
+        html = soup.find('div', class_="newsline main-col wrap_col").find('div',
+                                                                          class_="newsline__grid newsline__grid--leftline").find_all(
+            "a")
+
+        list_of_all_news = []
+        list_of_news_for_return = []
+        for text in html:
+            link = text.get("href")
+            list_of_all_news.append("https://tvrain.ru" + link)
+        print(page)
+
+        for i in range(0, len(list_of_all_news), 2):
+            if i > 10:
                 break
-        return news
+            list_of_news_for_return.append(list_of_all_news[i])
+        return list_of_news_for_return
+
