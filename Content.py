@@ -1,4 +1,3 @@
-from datetime import datetime
 
 import requests
 from bs4 import BeautifulSoup
@@ -50,17 +49,15 @@ class Content:
                 alerts = "Предупреждений нет"
 
             if day == "now":
+                print(data)
                 return f" в вашем городе {data['daily'][0]['temp']['day']}℃\n " \
                        "\n" \
-                       f"Днем {data['daily'][0]['temp']['day']}\n"  \
-                       f"Ночью {data['daily'][0]['temp']['night']}℃\n"  \
+                       f"Днем {data['daily'][0]['temp']['day']}\n" \
+                       f"Ночью {data['daily'][0]['temp']['night']}℃\n" \
                        f"Облачность {data['daily'][0]['clouds']}%" + smiles0 + "\n" \
-                       f"Влажность {data['daily'][0]['humidity']}% \n" \
-                       f"Днем ощущаестя как {data['daily'][0]['feels_like']['day']}℃\n" \
-                       f"Ночью ощущаестя как {data['daily'][0]['feels_like']['night']}℃\n" \
-                       f"\U000026A0 ПРЕДУПРЕЖДЕНИЯ НА {str(datetime.utcfromtimestamp(data['alerts'][-1]['start']).date())}: " \
-                       f"\n" \
-                       f"{alerts}"
+                                                                               f"Влажность {data['daily'][0]['humidity']}% \n" \
+                                                                               f"Днем ощущаестя как {data['daily'][0]['feels_like']['day']}℃\n" \
+                                                                               f"Ночью ощущаестя как {data['daily'][0]['feels_like']['night']}℃\n"
             elif day == "tomorrow":
                 if data['daily'][1]['humidity'] > 60:
                     smiles1 = "\U00002601"
@@ -70,34 +67,22 @@ class Content:
                        "\n" \
                        f"Днем {data['daily'][1]['temp']['day']}\n" \
                        f"Ночью {data['daily'][1]['temp']['night']}℃\n" \
-                       f"Облачность {data['daily'][1]['clouds']}%" + smiles1 +"\n"\
-                       f"Влажность {data['daily'][1]['humidity']}% \n"  \
-                       f"Днем ощущаестя как {data['daily'][1]['feels_like']['day']}℃\n" \
-                       f"Ночью ощущаестя как {data['daily'][1]['feels_like']['night']}℃\n" \
-                       f"\U000026A0 ПРЕДУПРЕЖДЕНИЯ НА {str(datetime.utcfromtimestamp(data['alerts'][-1]['start']).date())}: " \
-                       f"\n" \
-                       f"{alerts}"
+                       f"Облачность {data['daily'][1]['clouds']}%" + smiles1 + "\n" \
+                                                                               f"Влажность {data['daily'][1]['humidity']}% \n" \
+                                                                               f"Днем ощущаестя как {data['daily'][1]['feels_like']['day']}℃\n" \
+                                                                               f"Ночью ощущаестя как {data['daily'][1]['feels_like']['night']}℃\n"
             elif day == "week":
                 return data["daily"], alerts
 
     def news(self):
-        page = requests.get("https://tvrain.ru/news/")
-        x = page.content
-        soup = BeautifulSoup(x, 'html.parser')
-        html = soup.find('div', class_="newsline main-col wrap_col").find('div',
-                                                                          class_="newsline__grid newsline__grid--leftline").find_all(
-            "a")
-
-        list_of_all_news = []
-        list_of_news_for_return = []
-        for text in html:
-            link = text.get("href")
-            list_of_all_news.append("https://tvrain.ru" + link)
-        print(page)
-
-        for i in range(0, len(list_of_all_news), 2):
-            if i > 10:
-                break
-            list_of_news_for_return.append(list_of_all_news[i])
-        return list_of_news_for_return
-
+        page = requests.get(
+            "https://news.mail.ru/?utm_source=portal&utm_medium=new_portal_navigation&utm_campaign=news.mail.ru&mt_click_id=mt-curxh8-1651427866-462072801&mt_sub1=news.mail.ru")
+        soup = BeautifulSoup(page.content, 'lxml')
+        html = soup.findAll("a", class_="photo photo_small photo_scale photo_full js-topnews__item")
+        html_ = soup.find("a", class_="photo photo_full photo_scale js-topnews__item")
+        list_of_news = []
+        for i in html:
+            list_of_news.append(i.get("href"))
+        list_of_news.append(html_.get("href"))
+        print(list_of_news)
+        return list_of_news
