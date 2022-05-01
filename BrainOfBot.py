@@ -280,7 +280,7 @@ class BrainOfBot:
         print("Поехали")
 
         updater = Updater(
-            token='<MY-API-TOKEN>',
+            token='5093069989:AAFpImvrxEnqHc_oN9ElWIQX59ywnpYxaQw',
         )
         updater.dispatcher.add_handler(CommandHandler("start", filters=Filters.text, callback=self.do_echo_start))
         updater.dispatcher.add_handler(MessageHandler(filters=Filters.text, callback=self.do_echo))
