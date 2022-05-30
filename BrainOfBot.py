@@ -42,31 +42,33 @@ class BrainOfBot:
             self.text = update.message.text
             if Content().jsonOfAPI(city_name=self.text, day="now", ) != "ERROR_IN_JSON_API":
                 data = Content().jsonOfAPI(city_name=self.text, day="now")
-                update.message.reply_text(
-                    text="Сегодня" + data,
-                    reply_markup=Keyboard().keyBoardDaily()
-                )
-            else:
-                if self.missTake == 0:
-                    update.message.reply_photo(
-                        photo="https://sun9-50.userapi.com/impg/O7sQeAfLsgy6wbCD0S6-SdFHsqr7-7Apn7Vt4A/B_JLrZsqtus.jpg?size=600x408&quality=96&sign=9d83dc3128f3222928a76c4eda0e80f5&type=album",
-                        caption="ТЫ УВЕРЕН ЧТО ЕСТЬ ТАКОЙ ГОРОД?\n"
-                                "\n"
-                                "ПОПРОБУЙ ЕЩЕ РАЗ",
-                        reply_markup=Keyboard().keyBoardToMain(),
+                if isinstance(data, str):
+                    print(type(data))
+                    update.message.reply_text(
+                        text="Сегодня" + data,
+                        reply_markup=Keyboard().keyBoardDaily()
                     )
-                    self.missTake += 1
                 else:
-                    update.message.reply_photo(
-                        photo="https://thoughtcatalog.com/wp-content/uploads/2018/07/doverdemon.jpg",
-                        caption="НЕ НУЖНО \n"
-                                "БЫЛО \n"
-                                "ЕГО \n"
-                                "ЗЛИТЬ",
-                        reply_markup=Keyboard().keyBoardHomeOrForestCreepy(),
-                    )
-                    self.missTake = 0
-                    self.dicOfState[userId] = "creepy"
+                    if self.missTake == 0:
+                        update.message.reply_photo(
+                            photo="https://sun9-50.userapi.com/impg/O7sQeAfLsgy6wbCD0S6-SdFHsqr7-7Apn7Vt4A/B_JLrZsqtus.jpg?size=600x408&quality=96&sign=9d83dc3128f3222928a76c4eda0e80f5&type=album",
+                            caption="ТЫ УВЕРЕН ЧТО Я ЗНАЮ ТАКОЙ ГОРОД?\n"
+                                    "\n"
+                                    "ПОПРОБУЙ ЕЩЕ РАЗ",
+                            reply_markup=Keyboard().keyBoardToMain(),
+                        )
+                        self.missTake += 1
+                    else:
+                        update.message.reply_photo(
+                            photo="https://thoughtcatalog.com/wp-content/uploads/2018/07/doverdemon.jpg",
+                            caption="НЕ НУЖНО \n"
+                                    "БЫЛО \n"
+                                    "ЕГО \n"
+                                    "ЗЛИТЬ",
+                            reply_markup=Keyboard().keyBoardHomeOrForestCreepy(),
+                        )
+                        self.missTake = 0
+                        self.dicOfState[userId] = "creepy"
 
     def news(self, update: Update):
         listOfNews = Content().news()
