@@ -28,7 +28,7 @@ class Content:
     def jsonOfAPI(self, city_name, day, ):
         if self.coordinatesForCity(city_name) != "ERROR":
             lat, lon = self.coordinatesForCity(city_name)
-            API_key = "b41f154a86e9c4f96fd719a2d7207a11"
+            API_key = "MY_APY"
 
             link = requests.get(
                 f'https://api.openweathermap.org/data/2.5/onecall?lat={lat}&lon={lon}&units=metric&exclude=current,minute,hourly&appid={API_key}')
