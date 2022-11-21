@@ -28,11 +28,12 @@ class Content:
     def jsonOfAPI(self, city_name, day, ):
         if self.coordinatesForCity(city_name) != "ERROR":
             lat, lon = self.coordinatesForCity(city_name)
-            API_key = "MY_APY"
+            API_key = "97421d43f97766e5f2b2708a4571165f"
 
             link = requests.get(
                 f'https://api.openweathermap.org/data/2.5/onecall?lat={lat}&lon={lon}&units=metric&exclude=current,minute,hourly&appid={API_key}')
             data = link.json()
+            print(data)
             if data['daily'][0]['humidity'] > 60:
                 smiles0 = "\U00002601"
             else:
@@ -57,7 +58,8 @@ class Content:
                        f"Облачность {data['daily'][0]['clouds']}%" + smiles0 + "\n" \
                                                                                f"Влажность {data['daily'][0]['humidity']}% \n" \
                                                                                f"Днем ощущаестя как {data['daily'][0]['feels_like']['day']}℃\n" \
-                                                                               f"Ночью ощущаестя как {data['daily'][0]['feels_like']['night']}℃\n"
+                                                                               f"Ночью ощущаестя как {data['daily'][0]['feels_like']['night']}℃\n"\
+                                                                               f"{alerts}"
             elif day == "tomorrow":
                 if data['daily'][1]['humidity'] > 60:
                     smiles1 = "\U00002601"
@@ -70,7 +72,8 @@ class Content:
                        f"Облачность {data['daily'][1]['clouds']}%" + smiles1 + "\n" \
                                                                                f"Влажность {data['daily'][1]['humidity']}% \n" \
                                                                                f"Днем ощущаестя как {data['daily'][1]['feels_like']['day']}℃\n" \
-                                                                               f"Ночью ощущаестя как {data['daily'][1]['feels_like']['night']}℃\n"
+                                                                               f"Ночью ощущаестя как {data['daily'][1]['feels_like']['night']}℃\n" \
+                                                                               f"{alerts}"
             elif day == "week":
                 return data["daily"], alerts
 
