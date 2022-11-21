@@ -26,11 +26,7 @@ class BrainOfBot:
     def do_echo_start(self, update: Update, context: CallbackContext, ):
         update.message.reply_text(
             text="Я вас категорически приветствую. Я создан, что бы служить Вам, людишкам!\n"
-                 "Так что пользуйтесь мной, как вам угодно!"
-                 "\n"
-                 "\n"
-                 "\n"
-                 "...главное, не злить меня...",
+                 "Так что пользуйтесь мной, как вам угодно!",
             reply_markup=Keyboard().keyBoardMain(),
         )
 
