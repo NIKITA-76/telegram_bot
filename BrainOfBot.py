@@ -23,7 +23,6 @@ class BrainOfBot:
             reply_markup=Keyboard().keyBoardMain(),
         )
 
-
     def do_echo_start(self, update: Update, context: CallbackContext, ):
         update.message.reply_text(
             text="Я вас категорически приветствую. Я создан, что бы служить Вам, людишкам!\n"
@@ -34,7 +33,6 @@ class BrainOfBot:
                  "...главное, не злить меня...",
             reply_markup=Keyboard().keyBoardMain(),
         )
-
 
     def do_echo(self, update: Update, context: CallbackContext, ):
         userId = update.effective_user.id
@@ -73,12 +71,10 @@ class BrainOfBot:
     def news(self, update: Update):
         listOfNews = Content().news()
         for news in listOfNews:
-
             update.effective_message.reply_text(
                 news,
                 reply_markup=Keyboard().keyBoardMain()
             )
-
 
     def keyboardHendler(self, update: Update, bot: Bot, chat_data=None, **kwargs):
 
@@ -202,9 +198,9 @@ class BrainOfBot:
                 caption="НЕ НУЖНО БЫЛО ЕГО ЗЛИТЬ",
             )
             time.sleep(3.5)
-            update.effective_message.reply_photo(
-                photo="https://psv4.userapi.com/c237131/u245081982/docs/d19/9ef1b39e8609/pxfuel_com_-scaled.jpg?extra=a4oVMaYIQc52Uab_QJNKlYWYWx_sKDBk6J4qj-ByJS8LPVPyv7Wu6kC49jKGw2ocVebm8h08gmSJeZDGKiiG52ZO73CNSXMATn-l5LrP9JR-HHAu0PZSYforltL6Uja58S8yJLGoXqtpe5fOSGZoUCU/HXAVJ_0sQks.jpg?size=1439x946&quality=96&sign=b697480249cf92d471494ad17bf3d1ba&type=album",
+            update.effective_message.reply_text(
                 reply_markup=Keyboard().keyBoardScreamCreepy(),
+                text="ТВОИ КРИКИ НИКТО НЕ УСЛЫШИТ"
             )
         elif dataFromKeyboard == "backToForestForest":
             backFF = ["Ты спрятался за деревом", "Вроде пронесло",
@@ -265,11 +261,9 @@ class BrainOfBot:
         updater.dispatcher.add_handler(CallbackQueryHandler(callback=self.keyboardHendler))
         updater.dispatcher.add_handler(MessageHandler(filters=Filters.sticker, callback=self.do_echo_sticker))
 
-
         updater.start_polling()
         updater.idle()
 
 
 if __name__ == '__main__':
     BrainOfBot().main()
-
